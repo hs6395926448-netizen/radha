@@ -1,0 +1,24 @@
+# CampusSlot Cloud Email Gateway — one-time setup
+
+This build keeps the existing registration, booking, and appointment notification flows. It supports Google Apps Script `MailApp` gateway over HTTPS (recommended for Render) and retains SMTP as a fallback for local development.
+
+## 1. Apps Script
+Use your existing **CampusSlot Email Gateway** Apps Script deployment. The deployed web-app URL must end in `/exec`, execute as the Google account that authorized `MailApp`, and allow the requests your deployment is intended to accept. The script must expect JSON keys `token`, `to`, `subject`, `text`, and `html`, and return JSON with `{"ok":true}` on success or `{"ok":false,"error":"..."}` on failure.
+
+Do not put the secret in source code or share it in screenshots.
+
+## 2. Render environment variables
+Open Render Dashboard → `campusslot` Web Service → Environment. Add/update these two variables:
+
+- `EMAIL_GATEWAY_URL` = the full Apps Script deployed web-app URL copied from Manage deployments (ends with `/exec`)
+- `EMAIL_GATEWAY_SECRET` = exactly the same secret stored in Apps Script Script Properties under `GATEWAY_SECRET`
+
+Save changes and let Render redeploy. Do not change or delete `DATABASE_URL`, `SECRET_KEY`, or any existing database variables.
+
+## 3. Verify
+Register with an email address you can access, then check that inbox and Spam. If no message arrives, open Render → Logs and search for `CampusSlot REGISTRATION EMAIL FAILED`. This build records gateway response errors rather than silently treating `{"ok":false}` as success.
+
+## Notes
+- Apps Script `MailApp` has recipient quotas; quota exhaustion will be reported as a gateway error.
+- A successful gateway response means Apps Script accepted the send request; it does not guarantee inbox placement. Check Spam and Gmail delivery details if needed.
+- No database reset is required.
